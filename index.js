@@ -1,5 +1,7 @@
+const { response } = require("express");
 const express = require("express");
 const app = express();
+app.use(express.json());
 
 let phoneBook = [
   {
@@ -50,6 +52,40 @@ app.delete("/api/persons/:id", (request, response) => {
   phoneBook = phoneBook.filter((person) => person.id !== id);
 
   response.status(204).end();
+});
+
+// function that find the max id and increase by one
+function getRandomId(min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+app.post("/api/persons/", (request, response) => {
+  const { body } = request;
+
+  if (!body) {
+    return response.status(400).json({ error: "content missing" });
+  }
+
+  if (!body.name) {
+    return response.status(400).json({ error: "name missing" });
+  }
+
+  if (!body.number) {
+    return response.status(400).json({ error: "number missing" });
+  }
+
+  if (phoneBook.find((person) => person.name === body.name)) {
+    return response.status(400).json({ error: "name must be unique" });
+  }
+
+  const person = {
+    id: getRandomId(phoneBook.length, 10000),
+    name: body.name,
+    number: body.number,
+  };
+  phoneBook.push(person);
+
+  response.send(phoneBook);
 });
 
 const PORT = 3001;
