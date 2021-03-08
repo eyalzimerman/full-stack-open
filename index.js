@@ -1,8 +1,9 @@
+require("dotenv").config();
 const { response } = require("express");
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
-const mongoose = require("mongoose");
+const Person = require("./models/person");
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -35,32 +36,40 @@ let phoneBook = [
   },
 ];
 
+/*----------------API request--------------*/
+
 app.get("/api/persons", (request, response) => {
-  response.json(phoneBook);
+  Person.find({}).then((res) => {
+    response.json(res);
+  });
 });
 
 app.get("/api/info", (request, response) => {
-  response.send(
-    `PhoneBook has info for ${phoneBook.length} people <br/>${new Date()}`
-  );
+  Person.find({}).then((res) => {
+    response
+      .status(200)
+      .send(`PhoneBook has info for ${res.length} people <br/>${new Date()}`);
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
-  const person = phoneBook.find((person) => person.id === id);
 
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+  Person.find({ id }).then((res) => {
+    if (res) {
+      response.json(res);
+    } else {
+      response.status(404).end();
+    }
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
-  phoneBook = phoneBook.filter((person) => person.id !== id);
 
-  response.status(204).end();
+  Person.remove({ id }).then((res) => {
+    response.status(204).end();
+  });
 });
 
 // function that find the max id and increase by one
@@ -83,18 +92,21 @@ app.post("/api/persons/", (request, response) => {
     return response.status(400).json({ error: "number missing" });
   }
 
-  if (phoneBook.find((person) => person.name === body.name)) {
-    return response.status(400).json({ error: "name must be unique" });
-  }
+  Person.find({ name: body.name }).then((res) => {
+    if (res) {
+      return response.status(400).json({ error: "name must be unique" });
+    }
+  });
 
-  const person = {
+  const person = new Person({
     id: getRandomId(phoneBook.length, 10000),
     name: body.name,
     number: body.number,
-  };
-  phoneBook.push(person);
+  });
 
-  response.send(phoneBook);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 app.use("/", express.static(`./build`));

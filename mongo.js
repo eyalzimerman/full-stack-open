@@ -1,4 +1,4 @@
-const { bodyParser } = require("json-server");
+require("dotenv").config();
 const mongoose = require("mongoose");
 const randomId = require("./index.js");
 
@@ -23,7 +23,7 @@ mongoose.connect(url, {
 const personSchema = new mongoose.Schema({
   id: Number,
   name: String,
-  number: Number,
+  number: String,
 });
 
 const Person = mongoose.model("Person", personSchema);
