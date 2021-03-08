@@ -7,69 +7,61 @@ const Person = require("./models/person");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(morgan("tiny"));
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 app.use(
   morgan(":method :url :status :response-time ms - :res[content-length] :body")
 );
 
-let phoneBook = [
-  {
-    id: 1,
-    name: "eyal",
-    number: "0501230773",
-  },
-  {
-    id: 2,
-    name: "yair",
-    number: "0502340773",
-  },
-  {
-    id: 3,
-    name: "jino",
-    number: "0506780773",
-  },
-  {
-    id: 4,
-    name: "gil",
-    number: "0508880773",
-  },
-];
-
 /*----------------API request--------------*/
 
 app.get("/api/persons", (request, response) => {
-  Person.find({}).then((res) => {
-    response.json(res);
-  });
+  Person.find({})
+    .then((res) => {
+      response.json(res);
+    })
+    .catch((error) => {
+      response.status(500).send({ error: "Problems with our server" });
+    });
 });
 
 app.get("/api/info", (request, response) => {
-  Person.find({}).then((res) => {
-    response
-      .status(200)
-      .send(`PhoneBook has info for ${res.length} people <br/>${new Date()}`);
-  });
+  Person.find({})
+    .then((res) => {
+      response
+        .status(200)
+        .send(`PhoneBook has info for ${res.length} people <br/>${new Date()}`);
+    })
+    .catch((error) => {
+      response.status(500).send({ error: "Problems with our server" });
+    });
 });
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", validId, (request, response) => {
   const id = Number(request.params.id);
 
-  Person.find({ id }).then((res) => {
-    if (res) {
-      response.json(res);
-    } else {
-      response.status(404).end();
-    }
-  });
+  Person.find({ id })
+    .then((res) => {
+      if (res) {
+        response.json(res);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => {
+      response.status(500).send({ error: "Problems with our server" });
+    });
 });
 
-app.delete("/api/persons/:id", (request, response) => {
+app.delete("/api/persons/:id", validId, (request, response) => {
   const id = Number(request.params.id);
 
-  Person.remove({ id }).then((res) => {
-    response.status(204).end();
-  });
+  Person.remove({ id })
+    .then((res) => {
+      response.status(204).end();
+    })
+    .catch((error) => {
+      response.status(500).send({ error: "Problems with our server" });
+    });
 });
 
 // function that find the max id and increase by one
@@ -92,14 +84,18 @@ app.post("/api/persons/", (request, response) => {
     return response.status(400).json({ error: "number missing" });
   }
 
-  Person.find({ name: body.name }).then((res) => {
-    if (res) {
-      return response.status(400).json({ error: "name must be unique" });
-    }
-  });
+  Person.find({ name: body.name })
+    .then((res) => {
+      if (res) {
+        return response.status(400).json({ error: "name must be unique" });
+      }
+    })
+    .catch((error) => {
+      response.status(500).send({ error: "Problems with our server" });
+    });
 
   const person = new Person({
-    id: getRandomId(phoneBook.length, 10000),
+    id: getRandomId(1, 10000),
     name: body.name,
     number: body.number,
   });
@@ -119,5 +115,14 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+//middleware
+function validId(req, res, next) {
+  const { id } = Number(req.params);
+  if (!id) {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
+  next();
+}
 
 module.exports = getRandomId;
