@@ -105,6 +105,19 @@ app.post("/api/persons/", (request, response) => {
   });
 });
 
+app.put("/api/persons/:id", validId, (request, response) => {
+  const { body } = request;
+  const { id } = request.params;
+
+  const person = {
+    id: id,
+    number: body.number,
+  };
+  Person.updateOne({ id }, person, { new: true }).then((updatedPerson) => {
+    response.json(updatedPerson);
+  });
+});
+
 app.use("/", express.static(`./build`));
 
 app.get("/", (req, res) => {
@@ -118,8 +131,8 @@ app.listen(PORT, () => {
 
 //middleware
 function validId(req, res, next) {
-  const { id } = Number(req.params);
-  if (!id) {
+  const { id } = req.params;
+  if (isNaN(Number(id))) {
     return res.status(400).json({ message: "Invalid ID" });
   }
   next();
