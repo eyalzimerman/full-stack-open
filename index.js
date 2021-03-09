@@ -60,7 +60,7 @@ app.get("/api/persons/:id", validId, (request, response) => {
 app.delete("/api/persons/:id", validId, (request, response) => {
   const id = Number(request.params.id);
 
-  Person.remove({ id })
+  Person.deleteOne({ id })
     .then(() => {
       response.status(204).end();
     })
@@ -76,32 +76,12 @@ function getRandomId(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
-app.post("/api/persons/", (request, response) => {
+app.post("/api/persons/", isUnique, async (request, response) => {
   const { body } = request;
 
   if (!body) {
     return response.status(400).json({ error: "content missing" });
   }
-
-  if (!body.name) {
-    return response.status(400).json({ error: "name missing" });
-  }
-
-  if (!body.number) {
-    return response.status(400).json({ error: "number missing" });
-  }
-
-  Person.find({ name: body.name })
-    .then((res) => {
-      if (res) {
-        return response.status(400).json({ error: "name must be unique" });
-      }
-    })
-    .catch((error) => {
-      response
-        .status(500)
-        .send({ error: "Problems with our server", message: error.message });
-    });
 
   const person = new Person({
     id: getRandomId(1, 10000),
@@ -109,9 +89,19 @@ app.post("/api/persons/", (request, response) => {
     number: body.number,
   });
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        return response.status(400).json({ error: err.message });
+      }
+      return response
+        .status(500)
+        .send({ error: "Problems with our server", message: error.message });
+    });
 });
 
 app.put("/api/persons/:id", validId, (request, response) => {
@@ -145,6 +135,22 @@ function validId(req, res, next) {
     return res.status(400).json({ message: "Invalid ID" });
   }
   next();
+}
+
+async function isUnique(req, res, next) {
+  const { body } = req;
+
+  try {
+    const isUnique = await Person.find({ name: body.name });
+    if (isUnique.length !== 0) {
+      return res.status(400).json({ error: "name must be unique" });
+    }
+    next();
+  } catch {
+    return res
+      .status(500)
+      .send({ error: "Problems with our server", message: error.message });
+  }
 }
 
 module.exports = getRandomId;
