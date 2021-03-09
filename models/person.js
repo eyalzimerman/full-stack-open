@@ -11,7 +11,7 @@ mongoose
     useFindAndModify: false,
     useCreateIndex: true,
   })
-  .then((result) => {
+  .then(() => {
     console.log("connected to MongoDB");
   })
   .catch((error) => {
@@ -19,9 +19,9 @@ mongoose
   });
 
 const personSchema = new mongoose.Schema({
-  id: Number,
-  name: String,
-  number: String,
+  id: { type: Number, required: true },
+  name: { type: String, minlength: 3, required: true },
+  number: { type: String, minlength: 8, required: true },
 });
 
 personSchema.set("toJSON", {

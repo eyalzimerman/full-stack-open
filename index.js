@@ -1,5 +1,4 @@
 require("dotenv").config();
-const { response } = require("express");
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
@@ -7,7 +6,7 @@ const Person = require("./models/person");
 const app = express();
 app.use(cors());
 app.use(express.json());
-morgan.token("body", (req, res) => JSON.stringify(req.body));
+morgan.token("body", (req) => JSON.stringify(req.body));
 app.use(
   morgan(":method :url :status :response-time ms - :res[content-length] :body")
 );
@@ -20,7 +19,9 @@ app.get("/api/persons", (request, response) => {
       response.json(res);
     })
     .catch((error) => {
-      response.status(500).send({ error: "Problems with our server" });
+      response
+        .status(500)
+        .send({ error: "Problems with our server", message: error.message });
     });
 });
 
@@ -32,7 +33,9 @@ app.get("/api/info", (request, response) => {
         .send(`PhoneBook has info for ${res.length} people <br/>${new Date()}`);
     })
     .catch((error) => {
-      response.status(500).send({ error: "Problems with our server" });
+      response
+        .status(500)
+        .send({ error: "Problems with our server", message: error.message });
     });
 });
 
@@ -48,7 +51,9 @@ app.get("/api/persons/:id", validId, (request, response) => {
       }
     })
     .catch((error) => {
-      response.status(500).send({ error: "Problems with our server" });
+      response
+        .status(500)
+        .send({ error: "Problems with our server", message: error.message });
     });
 });
 
@@ -56,11 +61,13 @@ app.delete("/api/persons/:id", validId, (request, response) => {
   const id = Number(request.params.id);
 
   Person.remove({ id })
-    .then((res) => {
+    .then(() => {
       response.status(204).end();
     })
     .catch((error) => {
-      response.status(500).send({ error: "Problems with our server" });
+      response
+        .status(500)
+        .send({ error: "Problems with our server", message: error.message });
     });
 });
 
@@ -91,7 +98,9 @@ app.post("/api/persons/", (request, response) => {
       }
     })
     .catch((error) => {
-      response.status(500).send({ error: "Problems with our server" });
+      response
+        .status(500)
+        .send({ error: "Problems with our server", message: error.message });
     });
 
   const person = new Person({
@@ -118,7 +127,7 @@ app.put("/api/persons/:id", validId, (request, response) => {
   });
 });
 
-app.use("/", express.static(`./build`));
+app.use("/", express.static("./build"));
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "./index.html");
