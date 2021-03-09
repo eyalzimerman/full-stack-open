@@ -18,10 +18,8 @@ app.get("/api/persons", (request, response) => {
     .then((res) => {
       response.json(res);
     })
-    .catch((error) => {
-      response
-        .status(500)
-        .send({ error: "Problems with our server", message: error.message });
+    .catch(() => {
+      response.status(500).send({ error: "Problems with our server" });
     });
 });
 
@@ -32,10 +30,8 @@ app.get("/api/info", (request, response) => {
         .status(200)
         .send(`PhoneBook has info for ${res.length} people <br/>${new Date()}`);
     })
-    .catch((error) => {
-      response
-        .status(500)
-        .send({ error: "Problems with our server", message: error.message });
+    .catch(() => {
+      response.status(500).send({ error: "Problems with our server" });
     });
 });
 
@@ -50,10 +46,8 @@ app.get("/api/persons/:id", validId, (request, response) => {
         response.status(404).end();
       }
     })
-    .catch((error) => {
-      response
-        .status(500)
-        .send({ error: "Problems with our server", message: error.message });
+    .catch(() => {
+      response.status(500).send({ error: "Problems with our server" });
     });
 });
 
@@ -64,10 +58,8 @@ app.delete("/api/persons/:id", validId, (request, response) => {
     .then(() => {
       response.status(204).end();
     })
-    .catch((error) => {
-      response
-        .status(500)
-        .send({ error: "Problems with our server", message: error.message });
+    .catch(() => {
+      response.status(500).send({ error: "Problems with our server" });
     });
 });
 
@@ -98,9 +90,7 @@ app.post("/api/persons/", isUnique, async (request, response) => {
       if (err.name === "ValidationError") {
         return response.status(400).json({ error: err.message });
       }
-      return response
-        .status(500)
-        .send({ error: "Problems with our server", message: error.message });
+      return response.status(500).send({ error: "Problems with our server" });
     });
 });
 
@@ -147,9 +137,7 @@ async function isUnique(req, res, next) {
     }
     next();
   } catch {
-    return res
-      .status(500)
-      .send({ error: "Problems with our server", message: error.message });
+    return res.status(500).send({ error: "Problems with our server" });
   }
 }
 
